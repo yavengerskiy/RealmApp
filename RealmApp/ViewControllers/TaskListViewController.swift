@@ -9,8 +9,10 @@
 import RealmSwift
 
 class TaskListViewController: UITableViewController {
-
+    
     var taskLists: Results<TaskList>!
+    private var currentTasks: Results<Task>!
+    private var completedTasks: Results<Task>!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,7 +25,7 @@ class TaskListViewController: UITableViewController {
         navigationItem.rightBarButtonItem = addButton
         navigationItem.leftBarButtonItem = editButtonItem
         createTempData()
-        taskLists = StorageManager.shared.realm.objects(TaskList.self)
+        taskLists = StorageManager.shared.realm.objects(TaskList.self).sorted(byKeyPath: "date")
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -41,7 +43,12 @@ class TaskListViewController: UITableViewController {
         var content = cell.defaultContentConfiguration()
         let taskList = taskLists[indexPath.row]
         content.text = taskList.name
-        content.secondaryText = "\(taskList.tasks.count)"
+        
+        currentTasks = taskList.tasks.filter("isComplete = false")
+        completedTasks = taskList.tasks.filter("isComplete = true")
+        
+        content.secondaryText =  taskList.tasks.count != completedTasks.count || taskList.tasks.count == 0 ? "\(currentTasks.count)" : "✔️"
+        
         cell.contentConfiguration = content
         return cell
     }
@@ -81,8 +88,13 @@ class TaskListViewController: UITableViewController {
         let taskList = taskLists[indexPath.row]
         tasksVC.taskList = taskList
     }
-
+    
     @IBAction func sortingList(_ sender: UISegmentedControl) {
+        taskLists = sender.selectedSegmentIndex == 0 ?
+        taskLists.sorted(byKeyPath: "date") :
+        taskLists.sorted(byKeyPath: "name")
+        
+        tableView.reloadData()
     }
     
     @objc private func addButtonPressed() {
@@ -110,7 +122,6 @@ extension TaskListViewController {
                 self.save(taskList: newValue)
             }
         }
-        
         present(alert, animated: true)
     }
     

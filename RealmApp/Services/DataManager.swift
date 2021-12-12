@@ -14,7 +14,7 @@ class DataManager {
     private init() {}
     
     func createTempData(completion: @escaping () -> Void) {
-        if !UserDefaults.standard.bool(forKey: "temp") {
+        if !UserDefaults.standard.bool(forKey: "done") {
             let shoppingList = TaskList()
             shoppingList.name = "Shopping List"
             
@@ -41,7 +41,7 @@ class DataManager {
             
             DispatchQueue.main.async {
                 StorageManager.shared.save([shoppingList, moviesList])
-                UserDefaults.standard.set(true, forKey: "temp")
+                UserDefaults.standard.set(true, forKey: "done")
                 completion()
             }
             
